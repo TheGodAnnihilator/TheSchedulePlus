@@ -9,7 +9,7 @@ class ClientManager:
     def __init__(self, master):
         self.master = master
         master.title("Client & Project Management System")
-        master.geometry("900x740")  # extra height for status bar   
+        master.geometry("900x740")  # extra height for status bar
         master.configure(bg="#ffffff")  # White background
 
         # Status bar
@@ -930,17 +930,36 @@ class ClientManager:
         self.project_status_combo.set('')
         self.project_notes_text.delete('1.0', tk.END)
 
-    def populate_project_list(self):
+    def on_project_client_selected(self, event=None):
+        client_with_id = self.client_combo.get()
+        if client_with_id:
+            client_id = client_with_id.split("(")[-1][:-1].strip()
+            self.populate_project_manager_dropdown(client_id)
+            self.populate_project_list(client_id)  # Pass client_id to filter projects
+        else:
+            self.project_manager_combo['values'] = []
+            self.project_manager_combo.set('')
+            self.populate_project_list()  # Show all projects if no client is selected
+
+    def populate_project_list(self, client_id=None):
         self.project_list.delete(*self.project_list.get_children())
         try:
-            self.cursor.execute(
-                "SELECT project_no, client_id, project_name, client_project_manager, project_type, project_status, notes FROM project ORDER BY client_id")
+            if client_id:
+                self.cursor.execute(
+                    "SELECT project_no, client_id, project_name, client_project_manager, project_type, project_status, notes "
+                    "FROM project WHERE client_id=%s ORDER BY client_id", (client_id,))
+            else:
+                self.cursor.execute(
+                    "SELECT project_no, client_id, project_name, client_project_manager, project_type, project_status, notes "
+                    "FROM project ORDER BY client_id")
+
             rows = self.cursor.fetchall()
             for i, row in enumerate(rows):
                 tag = 'evenrow' if i % 2 == 0 else 'oddrow'
                 self.project_list.insert('', tk.END, values=row, tags=(tag,))
         except mysql.connector.Error as e:
             self.show_status_message(f"Error fetching projects: {e}", error=True)
+
 
     # --- Task tab ---
     def create_task_widgets(self, parent):
@@ -1031,6 +1050,7 @@ class ClientManager:
         self.task_list.bind("<Double-1>", self.load_task_details)
 
         self.populate_task_client_dropdown()
+        self.task_project_combo.bind("<<ComboboxSelected>>", self.on_task_project_selected)
 
     def on_billable_changed(self, event):
         selected = self.billable_combo.get()
@@ -1275,10 +1295,26 @@ class ClientManager:
         except mysql.connector.Error as e:
             self.show_status_message(f"Error fetching projects for tasks: {e}", True)
 
-    def populate_task_list(self):
+    def on_task_project_selected(self, event=None):
+        project_with_no = self.task_project_combo.get()
+        if project_with_no:
+            project_no = project_with_no.split("(")[-1][:-1].strip()
+            self.populate_task_list(project_no)  # Pass project_no to filter tasks
+        else:
+            self.populate_task_list()  # Show all tasks if no project is selected
+
+    def populate_task_list(self, project_no=None):
         self.task_list.delete(*self.task_list.get_children())
         try:
-            self.cursor.execute("SELECT task_id, client_id, project_no, task_name, billable, hourly_rate, lumpsum, task_status, notes FROM task ORDER BY client_id")
+            if project_no:
+                self.cursor.execute(
+                    "SELECT task_id, client_id, project_no, task_name, billable, hourly_rate, lumpsum, task_status, notes "
+                    "FROM task WHERE project_no=%s ORDER BY client_id", (project_no,))
+            else:
+                self.cursor.execute(
+                    "SELECT task_id, client_id, project_no, task_name, billable, hourly_rate, lumpsum, task_status, notes "
+                    "FROM task ORDER BY client_id")
+
             rows = self.cursor.fetchall()
             for i, row in enumerate(rows):
                 tag = 'evenrow' if i % 2 == 0 else 'oddrow'
@@ -1298,7 +1334,8 @@ class ClientManager:
                     row[8] = ""
                 self.task_list.insert('', tk.END, values=row, tags=(tag,))
         except mysql.connector.Error as e:
-            self.show_status_message(f"Error fetching tasks: {e}", True)
+            self.show_status_message(f"Error fetching tasks: {e}", error=True)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
