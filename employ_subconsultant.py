@@ -7,9 +7,7 @@ import os
 class EmploySubconsultantManager:
     def __init__(self, master):
         self.master = master
-        master.title("Employ & Subconsultant Manager")
-        master.geometry("900x600")
-        master.configure(bg="#ffffff")
+
 
         self.status_var = tk.StringVar()
         self.status_bar = ttk.Label(master, textvariable=self.status_var, relief=tk.SUNKEN, anchor='w', padding=(5, 2))

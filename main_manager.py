@@ -8,9 +8,7 @@ import string
 class ClientManager:
     def __init__(self, master):
         self.master = master
-        master.title("Client & Project Management System")
-        master.geometry("900x740")  # extra height for status bar
-        master.configure(bg="#ffffff")  # White background
+
 
         # Status bar
         self.status_var = tk.StringVar()

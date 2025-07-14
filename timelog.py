@@ -12,9 +12,7 @@ class TimeLogManager:
 
     def __init__(self, master):
         self.master = master
-        master.title("Time Log Manager")
-        master.geometry("1200x750")
-        master.configure(bg="#ffffff")
+
 
         # Status bar setup
         self.status_var = tk.StringVar()
