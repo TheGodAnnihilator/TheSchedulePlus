@@ -22,13 +22,6 @@ class MainApplication:
         master.geometry("1200x800") # Set a suitable initial window size
         master.configure(bg="#ffffff") # White background for the main window
 
-        # Main status bar for the entire application
-        self.status_var = tk.StringVar()
-        self.status_bar = ttk.Label(master, textvariable=self.status_var,
-                                    relief=tk.SUNKEN, anchor='w', padding=(5,2))
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-        self.show_status_message("Application started successfully.")
-
         # Apply consistent styling across the application
         self.create_styles()
 
@@ -45,25 +38,36 @@ class MainApplication:
         self.main_notebook.add(self.timelog_frame, text="Time Log Management")
         self.main_notebook.add(self.employ_subconsultant_frame, text="Employ & Subconsultant Management")
 
-        # Instantiate each manager class within its respective frame
-        # Each manager will now manage its own GUI elements within its assigned frame.
-        try:
+        # Initialize manager instances to None, they will be created on demand
+        self.client_manager = None
+        self.timelog_manager = None
+        self.employ_subconsultant_manager = None
+
+        # Bind the tab change event
+        self.main_notebook.bind("<<NotebookTabChanged>>", self.on_tab_change)
+
+        # Manually trigger the tab change for the first tab to load it
+        self.on_tab_change(None)
+
+    def on_tab_change(self, event):
+        """
+        Callback function executed when the selected tab changes.
+        This function implements lazy loading of manager classes.
+        """
+        selected_tab_id = self.main_notebook.select()
+        selected_tab_text = self.main_notebook.tab(selected_tab_id, "text")
+
+        if selected_tab_text == "Client & Project Management" and self.client_manager is None:
+            # Instantiate ClientManager only when its tab is first selected
             self.client_manager = ClientManager(self.client_project_frame)
-            self.show_status_message("Client & Project Manager loaded.")
-        except Exception as e:
-            self.show_status_message(f"Error loading Client & Project Manager: {e}", error=True)
 
-        try:
+        elif selected_tab_text == "Time Log Management" and self.timelog_manager is None:
+            # Instantiate TimeLogManager only when its tab is first selected
             self.timelog_manager = TimeLogManager(self.timelog_frame)
-            self.show_status_message("Time Log Manager loaded.")
-        except Exception as e:
-            self.show_status_message(f"Error loading Time Log Manager: {e}", error=True)
 
-        try:
+        elif selected_tab_text == "Employ & Subconsultant Management" and self.employ_subconsultant_manager is None:
+            # Instantiate EmploySubconsultantManager only when its tab is first selected
             self.employ_subconsultant_manager = EmploySubconsultantManager(self.employ_subconsultant_frame)
-            self.show_status_message("Employ & Subconsultant Manager loaded.")
-        except Exception as e:
-            self.show_status_message(f"Error loading Employ & Subconsultant Manager: {e}", error=True)
 
     def create_styles(self):
         """
@@ -78,8 +82,6 @@ class MainApplication:
         bg_color = "#ffffff"        # White background
         accent_color = "#0066cc"    # Blue accent for headings and selected items
         text_color = "#000000"      # Black text
-        # row_even_color = "#f9f9f9"  # Moved to individual manager classes
-        # row_odd_color = "#e5e5e5"   # Moved to individual manager classes
 
         # Configure Notebook (tabs) style
         style.configure('TNotebook', background=bg_color, borderwidth=0)
@@ -158,16 +160,6 @@ class MainApplication:
                         relief='flat') # Flat headings
         style.map('Treeview.Heading',
                   background=[('active', '#004d99')]) # Darker blue on heading hover/active
-
-        # Treeview row tags are configured within individual manager classes (e.g., ClientManager, TimeLogManager)
-        # style.tag_configure('evenrow', background=row_even_color) # REMOVED
-        # style.tag_configure('oddrow', background=row_odd_color)   # REMOVED
-        # style.tag_configure('total', background='#e6f3ff', font=('Segoe UI', 10, 'bold')) # REMOVED
-
-    def show_status_message(self, message, error=False):
-        """Displays a message in the main application's status bar."""
-        self.status_var.set(message)
-        self.status_bar.configure(foreground='red' if error else 'green')
 
 if __name__ == "__main__":
     root = tk.Tk()
