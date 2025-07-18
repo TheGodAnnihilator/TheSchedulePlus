@@ -1,188 +1,58 @@
+n
+# TheSchedulePlus
 
-# 📅 TheSchedulePlus
+> A centralized GUI application integrating Client & Project, Time Log, and Employ & Subconsultant management systems built with Tkinter.
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)
-![MySQL](https://img.shields.io/badge/Database-MySQL-blue.svg)
-![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20Mac-informational)
-![Status](https://img.shields.io/badge/Status-Active-brightgreen)
+[![License: Not specified](https://img.shields.io/badge/License-Not%20specified-yellow.svg)](https://github.com/TheGodAnnihilator/TheSchedulePlus)
+[![GitHub stars](https://img.shields.io/github/stars/TheGodAnnihilator/TheSchedulePlus?style=social)](https://github.com/TheGodAnnihilator/TheSchedulePlus)
 
-> A comprehensive desktop-based **Database Management System** for managing **clients**, **employees**, **subconsultants**, **projects**, and **time logs**. Built with Python, Tkinter, and MySQL for organizations that need a customizable, local, and professional solution for operational tracking.
+## Description
 
----
+The Schedule Plus is a desktop application designed to streamline client, project, time log, employee, and subconsultant management. Built using Python and the Tkinter GUI library, it provides a tabbed interface for managing different aspects of project workflows. This application aims to centralize key operational tasks, making it easier to track project progress, manage time logs, and handle employee/subconsultant information. It leverages lazy loading to optimize performance, instantiating manager classes only when their corresponding tabs are accessed. The application also features a custom style configuration for a consistent and modern user experience. Data storage is handled through `mysql.connector`, implying a MySQL database backend.
 
-## 📚 Table of Contents
+## ✨ Key Features
 
-- [Features](#-features)
-- [Architecture](#-architecture)
-- [Screens & Functionalities](#-screens--functionalities)
-- [Installation](#-installation)
-- [Configuration](#-configuration)
-- [Usage](#-usage)
-- [Project Structure](#-project-structure)
-- [Roadmap](#-roadmap)
-- [Contributing](#-contributing)
-- [License](#-license)
+- **Client & Project Management:** Allows users to manage client information and project details within a dedicated tab.
+- **Time Log Management:** Provides functionality for tracking and managing time logs associated with projects and employees.
+- **Employ & Subconsultant Management:** Enables users to manage employee and subconsultant information, potentially including assignments and payment details.
 
----
+## 🛠️ Technology Stack
 
-## ✨ Features
+- **Frontend:** Tkinter, ttk (themed Tkinter widgets)
+- **Backend:** Python
+- **Database:** MySQL (using `mysql.connector`)
 
-- ✅ GUI-powered MySQL database management
-- ✅ Client and Project tracking
-- ✅ Add, view, edit, and delete **employees** and **subconsultants**
-- ✅ Time logging with project and task linking
-- ✅ State → City cascading dropdowns
-- ✅ Real-time validation and success/error messages
-- ✅ Configurable MySQL connection via `config.ini`
+## 🚀 Getting Started
 
----
+### Prerequisites
 
-## 🧱 Architecture
+- Python 3.x (with Tkinter support)
+- MySQL Database Server
 
-- **Frontend**: Tkinter (Python GUI toolkit)
-- **Backend**: Python + `mysql.connector`
-- **Database**: MySQL (local or remote)
-- **Configuration**: `.ini` file (simple and editable)
+### Installation
 
----
-
-## 🖥️ Screens & Functionalities
-
-### 🔹 `main_manager.py`
-Acts as the main dashboard. Launches other windows (e.g., employee manager, subconsultant manager, and time logger).
-
----
-
-### 🔹 `employ_subconsultant.py`
-**Features:**
-- Add/View/Edit/Delete employees and subconsultants
-- Fields include:
-  - Name
-  - Type (employee or subconsultant)
-  - State and dynamic City
-  - ZIP code
-- Modern and structured layout with form validation
-
----
-
-### 🔹 `timelog.py`
-**Features:**
-- Time tracking per task
-- Linked to employee and subconsultant entries
-- "View by Date" tab shows:
-  - List of all activities on a selected date
-  - **Total hours worked** per day
-
----
-
-### 🔹 `config.ini`
-```ini
-[mysql]
-host = ''
-user = ''
-password = ''
-database = ''
+1.  Clone the repository:
+    ```sh
+    git clone https://github.com/TheGodAnnihilator/TheSchedulePlus
+    ```
+2.  Navigate to the project directory:
+    ```sh
+    cd TheSchedulePlus
+    ```
+3.  Install dependencies:
+    ```sh
+    pip install mysql-connector-python
+    ```
+                
+### Running the Project
+```sh
+python main.py
 ```
-> Used for database connection setup. Keep this file secure and **never commit with credentials in production.**
-
----
-
-## 🛠️ Installation
-
-### ✅ Prerequisites
-
-- Python 3.8 or later
-- MySQL Server
-- `pip` (Python package manager)
-
-### 🐍 Python Dependencies
-
-Install required packages using:
-
-```bash
-pip install mysql-connector-python
-```
-
----
-
-## ⚙️ Configuration
-
-Edit the `config.ini` file to match your MySQL credentials and database name:
-
-```ini
-[mysql]
-host = localhost
-user = root
-password = your_password_here
-database = your_database_name
-```
-
----
-
-## 🚀 Usage
-
-1. Start MySQL Server.
-2. Run the main application:
-
-```bash
-python main_manager.py
-```
-
-3. Use the GUI to:
-   - Add/manage employees and subconsultants
-   - Log time entries
-   - View daily summaries of hours worked
-
----
-
-## 📁 Project Structure
-
-```text
-TheSchedulePlus/
-│
-├── main_manager.py           # Entry point – launches submodules
-├── employ_subconsultant.py   # GUI for employee/subconsultant management
-├── timelog.py                # GUI for time logging and daily summary
-├── config.ini                # MySQL credentials and database name
-```
-
----
-
-## 🧭 Roadmap
-
-- [ ] Add search and filter functionality
-- [ ] Export time logs as CSV or Excel
-- [ ] Authentication/login system
-- [ ] Project/task hierarchy with deadlines
-- [ ] Admin panel for user access levels
-
----
 
 ## 🤝 Contributing
 
-Contributions are welcome! To contribute:
+Contributions are welcome! Please check the [issues page](https://github.com/TheGodAnnihilator/TheSchedulePlus/issues) for ways to contribute.
 
-1. Fork the repo
-2. Create your feature branch:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+## 📝 License
 
----
-
-## 📜 License
-
-This project is under the **MIT License** – feel free to use and modify it.
-
----
-
-## 📬 Contact
-
-For issues, suggestions, or collaborations, open an issue or contact the repository owner.
-
----
-
-> _Crafted with ❤️ to simplify scheduling and operations for teams._
+This project is licensed under the **Not specified**.
