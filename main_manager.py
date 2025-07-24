@@ -7,7 +7,7 @@ import string
 
 
 class ClientManager:
-    def __init__(self, master):
+    def __init__(self, master,status_callback):
         self.master = master
 
         # Status bar

@@ -14,7 +14,7 @@ class TimeLogManager:
     """
     DROP_TABLE_FIRST = False
 
-    def __init__(self, master):
+    def __init__(self, master,status_callback):
         """
         Initializes the TimeLogManager application.
         Args:

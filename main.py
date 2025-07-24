@@ -2,13 +2,10 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import configparser
 import os
-import mysql.connector
 import subprocess
 import platform
 
-# Import the manager classes from the other files
-# Ensure these files (main_manager.py, timelog.py, employ_subconsultant.py)
-# are in the same directory as this central_gui.py script.
+# Import the actual manager classes from their files
 from main_manager import ClientManager
 from timelog import TimeLogManager
 from employ_subconsultant import EmploySubconsultantManager
@@ -16,153 +13,155 @@ from employ_subconsultant import EmploySubconsultantManager
 
 class MainApplication:
     """
-    Centralized GUI application integrating Client & Project, Time Log,
-    and Employ & Subconsultant management systems.
+    Centralized GUI application integrating all management systems.
     """
 
     def __init__(self, master):
         self.master = master
         master.title("The Schedule Plus")
-        master.geometry("1200x850")  # Increased height for the backup button
-        master.configure(bg="#ffffff")  # White background for the main window
+        master.geometry("1200x800")  # Adjusted height after removing status bar
+        master.configure(bg="#ffffff")
 
-        # Apply consistent styling across the application
         self.create_styles()
+        self.create_menu()
 
-        # Create the main notebook (tabbed interface)
+        # --- Main Notebook (Tabs) ---
         self.main_notebook = ttk.Notebook(master)
         self.main_notebook.pack(expand=True, fill='both', padx=10, pady=10)
 
-        # Create individual frames for each manager and add them as tabs
+        # Create frames for each tab
         self.client_project_frame = ttk.Frame(self.main_notebook)
         self.timelog_frame = ttk.Frame(self.main_notebook)
         self.employ_subconsultant_frame = ttk.Frame(self.main_notebook)
 
         self.main_notebook.add(self.client_project_frame, text="Client & Project Management")
         self.main_notebook.add(self.timelog_frame, text="Time Log Management")
-        self.main_notebook.add(self.employ_subconsultant_frame, text="Employ & Subconsultant Management")
+        self.main_notebook.add(self.employ_subconsultant_frame, text="Employ & Subconsultant")
 
-        # Instantiate each manager class within its respective frame
-        # Each manager will now manage its own GUI elements within its assigned frame.
+        # --- Manager Instantiation ---
+        self.client_manager = None
+        self.timelog_manager = None
+        self.employ_subconsultant_manager = None
+
+        self.main_notebook.bind("<<NotebookTabChanged>>", self.on_tab_selected)
+        self.load_client_manager()  # Load the first tab by default
+
+    def create_menu(self):
+        """Creates the main application menu bar."""
+        menu_bar = tk.Menu(self.master)
+        self.master.config(menu=menu_bar)
+
+        file_menu = tk.Menu(menu_bar, tearoff=0)
+        menu_bar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Backup Database...", command=self.backup_database)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.master.quit)
+
+    def on_tab_selected(self, event):
+        """Handles the lazy loading of managers when a tab is selected."""
+        selected_tab = self.main_notebook.index(self.main_notebook.select())
+        if selected_tab == 0 and self.client_manager is None:
+            self.load_client_manager()
+        elif selected_tab == 1 and self.timelog_manager is None:
+            self.load_timelog_manager()
+        elif selected_tab == 2 and self.employ_subconsultant_manager is None:
+            self.load_employ_subconsultant_manager()
+
+    def load_client_manager(self):
         try:
-            self.client_manager = ClientManager(self.client_project_frame)
-
-        elif selected_tab_text == "Time Log Management" and self.timelog_manager is None:
-            # Instantiate TimeLogManager only when its tab is first selected
-            self.timelog_manager = TimeLogManager(self.timelog_frame)
-            self.show_status_message("Time Log Manager loaded.")
+            self.client_manager = ClientManager(self.client_project_frame, self.show_status_message)
         except Exception as e:
-            self.show_status_message(f"Error loading Time Log Manager: {e}", error=True)
+            self.handle_load_error("Client & Project", e)
 
+    def load_timelog_manager(self):
         try:
-            self.employ_subconsultant_manager = EmploySubconsultantManager(self.employ_subconsultant_frame)
-            self.show_status_message("Employ & Subconsultant Manager loaded.")
+            self.timelog_manager = TimeLogManager(self.timelog_frame, self.show_status_message)
         except Exception as e:
-            self.show_status_message(f"Error loading Employ & Subconsultant Manager: {e}", error=True)
+            self.handle_load_error("Time Log", e)
+
+    def load_employ_subconsultant_manager(self):
+        try:
+            self.employ_subconsultant_manager = EmploySubconsultantManager(self.employ_subconsultant_frame,
+                                                                           self.show_status_message)
+        except Exception as e:
+            self.handle_load_error("Employ & Subconsultant", e)
+
+    def handle_load_error(self, module_name, error):
+        self.show_status_message(f"Could not load the {module_name} module: {error}", error=True)
 
     def create_styles(self):
-        """
-        Configures the ttk styles for a consistent look and feel across the application.
-        This central style definition will be applied to all widgets.
-        """
-        self.master.option_add('*Font', ('Segoe UI', 10))  # Set default font for all widgets
+        """Configures ttk styles for a consistent look and feel."""
         style = ttk.Style()
-        style.theme_use('clam')  # Use 'clam' theme for a modern look
+        style.theme_use('clam')
+        bg_color, accent_color = "#ffffff", "#0066cc"
 
-        # Define color palette
-        bg_color = "#ffffff"        # White background
-        accent_color = "#0066cc"    # Blue accent for headings and selected items
-        text_color = "#000000"      # Black text
-        # row_even_color = "#f9f9f9"  # Moved to individual manager classes
-        # row_odd_color = "#e5e5e5"   # Moved to individual manager classes
-
-        # Configure Notebook (tabs) style
+        style.configure('.', font=('Segoe UI', 10))
         style.configure('TNotebook', background=bg_color, borderwidth=0)
-        style.configure('TNotebook.Tab',
-                        background=bg_color,
-                        foreground=text_color,
-                        padding=[10, 5],
-                        font=('Segoe UI', 10, 'bold'))  # Bold font for tabs
-        style.map('TNotebook.Tab',
-                  background=[('selected', accent_color), ('active', '#004d99')],  # Blue when selected/active
-                  foreground=[('selected', '#ffffff'), ('active', '#ffffff')])  # White text when selected/active
-
-        # Configure Frame and LabelFrame styles
+        style.configure('TNotebook.Tab', padding=[10, 5], font=('Segoe UI', 10, 'bold'))
+        style.map('TNotebook.Tab', background=[('selected', accent_color)], foreground=[('selected', 'white')])
         style.configure('TFrame', background=bg_color)
-        style.configure('TLabelframe', background=bg_color, foreground=text_color, borderwidth=1, relief='solid')
-        style.configure('TLabelframe.Label',
-                        background=bg_color,
-                        foreground=accent_color,
-                        font=('Segoe UI', 11, 'bold'))  # Accent color for LabelFrame titles
-
-        # Configure Label style
-        style.configure('TLabel', background=bg_color, foreground=text_color)
-
-        # Configure Entry and Combobox styles
-        entry_style_config = {
-            'fieldbackground': '#ffffff',
-            'foreground': text_color,
-            'padding': 5,
-            'borderwidth': 1,
-            'relief': 'solid',
-            'bordercolor': '#cccccc'  # Light grey border
-        }
-        style.configure('TEntry', **entry_style_config)
-        style.configure('TCombobox', **entry_style_config)
-
-        # Configure Accent Button style (for primary actions)
-        style.configure('Accent.TButton',
-                        background=accent_color,
-                        foreground='#ffffff',
-                        font=('Segoe UI', 10, 'bold'),
-                        padding=8,
-                        relief='flat',  # Flat design
-                        borderwidth=0,
-                        focusthickness=0)  # Remove focus border
-        style.map('Accent.TButton',
-                  background=[('active', '#004d99')],  # Darker blue on hover/active
-                  foreground=[('active', '#ffffff')])
-
-        # Configure standard Button style (for secondary actions)
-        style.configure('TButton',
-                        background='#cccccc',  # Grey background
-                        foreground=text_color,
-                        font=('Segoe UI', 10, 'bold'),
-                        padding=8,
-                        relief='flat',
-                        borderwidth=0,
-                        focusthickness=0)
-        style.map('TButton',
-                  background=[('active', '#b3b3b3')],  # Darker grey on hover/active
-                  foreground=[('active', '#000000')])
-
-        # Configure Treeview style (general properties, not row tags)
-        style.configure('Treeview',
-                        background=bg_color,
-                        foreground=text_color,
-                        fieldbackground=bg_color,
-                        rowheight=28,  # Height of each row
-                        font=('Segoe UI', 10),
-                        bordercolor='#cccccc',  # Light grey border for the Treeview widget itself
-                        borderwidth=1,
-                        relief='solid')
-        style.configure('Treeview.Heading',
-                        background=accent_color,
-                        foreground='#ffffff',
-                        font=('Segoe UI', 11, 'bold'),
-                        relief='flat')  # Flat headings
-        style.map('Treeview.Heading',
-                  background=[('active', '#004d99')])  # Darker blue on heading hover/active
-
-        # Treeview row tags are configured within individual manager classes (e.g., ClientManager, TimeLogManager)
-        # style.tag_configure('evenrow', background=row_even_color) # REMOVED
-        # style.tag_configure('oddrow', background=row_odd_color)   # REMOVED
-        # style.tag_configure('total', background='#e6f3ff', font=('Segoe UI', 10, 'bold')) # REMOVED
+        style.configure('TLabelframe', background=bg_color)
+        style.configure('TLabelframe.Label', background=bg_color, foreground=accent_color,
+                        font=('Segoe UI', 11, 'bold'))
+        style.configure('TLabel', background=bg_color)
+        style.configure('TButton', padding=8, font=('Segoe UI', 10, 'bold'))
+        style.configure('Accent.TButton', background=accent_color, foreground='white')
+        style.map('Accent.TButton', background=[('active', '#004d99')])
+        style.configure('Treeview', rowheight=28)
+        style.configure('Treeview.Heading', background=accent_color, foreground='white', font=('Segoe UI', 11, 'bold'))
+        style.map('Treeview', background=[('selected', accent_color)])
+        style.configure('total.Treeview', background='#e6f3ff', font=('Segoe UI', 10, 'bold'))
 
     def show_status_message(self, message, error=False):
-        """Displays a message in the main application's status bar."""
-        self.status_var.set(message)
-        self.status_bar.configure(foreground='red' if error else 'green')
+        """Prints a message to the console and shows a popup for errors."""
+        if error:
+            print(f"ERROR: {message}")
+            messagebox.showerror("Error", message)
+        else:
+            print(f"STATUS: {message}")
+
+    def backup_database(self):
+        """Performs a database backup using mysqldump."""
+        config = configparser.ConfigParser()
+        try:
+            config.read('config.ini')
+            db_config = config['mysql']
+            user, password, database, host = db_config['user'], db_config['password'], db_config['database'], db_config[
+                'host']
+        except Exception as e:
+            self.show_status_message(f"Could not read database info from config.ini: {e}", error=True)
+            return
+
+        backup_path = filedialog.asksaveasfilename(defaultextension=".sql", filetypes=[("SQL Backup", "*.sql")],
+                                                   title="Save Database Backup")
+        if not backup_path:
+            self.show_status_message("Backup cancelled.")
+            return
+
+        try:
+            command = ['mysqldump', f'--user={user}', f'--password={password}', f'--host={host}', '--protocol=tcp',
+                       '--single-transaction', database]
+            with open(backup_path, 'w', encoding='utf-8') as f:
+                process = subprocess.run(command, stdout=f, stderr=subprocess.PIPE, text=True, check=False)
+
+            if process.returncode == 0:
+                self.show_status_message(f"Database backed up to {os.path.basename(backup_path)}")
+                messagebox.showinfo("Backup Successful", f"Backup saved to:\n{backup_path}")
+            else:
+                self.handle_backup_error(process.stderr)
+
+        except FileNotFoundError:
+            error_msg = "Error: 'mysqldump' not found. Ensure MySQL client tools are installed and in your system's PATH."
+            if platform.system() == "Darwin":
+                error_msg += "\n\nOn macOS, you may need to add it to your path, e.g., in ~/.zshrc:\nexport PATH=$PATH:/usr/local/mysql/bin"
+            self.show_status_message(error_msg, error=True)
+        except Exception as e:
+            self.handle_backup_error(str(e))
+
+    def handle_backup_error(self, error_text):
+        error_msg = f"Backup failed: {error_text.strip()}"
+        self.show_status_message(error_msg, error=True)
+
 
 if __name__ == "__main__":
     root = tk.Tk()

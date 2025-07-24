@@ -5,7 +5,7 @@ import configparser
 import os
 
 class EmploySubconsultantManager:
-    def __init__(self, master):
+    def __init__(self, master,status_callback):
         self.master = master
 
 
