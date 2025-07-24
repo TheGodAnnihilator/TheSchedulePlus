@@ -22,6 +22,7 @@ class TimeLogManager:
         """
         self.master = master
 
+
         # Status bar setup
         self.status_var = tk.StringVar()
         self.status_bar = ttk.Label(master, textvariable=self.status_var,
@@ -38,6 +39,7 @@ class TimeLogManager:
         try:
             self.conn = mysql.connector.connect(**self.db_config)
             self.cursor = self.conn.cursor()
+            self.show_status_message("Database connection successful", error=False)
         except mysql.connector.Error as e:
             self.show_status_message(f"Database connection error: {e}", error=True)
             master.after(5000, master.destroy)
@@ -48,7 +50,8 @@ class TimeLogManager:
         self.create_styles()
         self.create_gui()
         self.populate_dropdowns()
-        self.populate_time_log_list()
+        # Initially populate the list with logs from the current date
+        self.populate_time_log_list(for_date=datetime.now().strftime('%Y-%m-%d'))
 
     def create_tables(self):
         """
@@ -174,6 +177,7 @@ class TimeLogManager:
         """Create widgets for the time log entry tab."""
         input_frame = ttk.LabelFrame(parent, text="Time Log Entry", padding=15)
         input_frame.pack(fill='x', padx=10, pady=10)
+        input_frame.columnconfigure(1, weight=1)
 
         fields = [
             ("Date:", "date_entry", DateEntry(input_frame, width=18, date_pattern='y-mm-dd')),
@@ -189,6 +193,9 @@ class TimeLogManager:
             widget.grid(row=row, column=1, sticky='ew', pady=5, padx=5)
             setattr(self, attr_name, widget)
 
+        # Bind date selection to filter the list
+        self.date_entry.bind("<<DateEntrySelected>>", self.filter_logs_by_entry_date)
+
         ttk.Label(input_frame, text="Notes:").grid(row=6, column=0, sticky='w', pady=5, padx=5)
         self.notes_text = tk.Text(input_frame, height=4, width=35, wrap='word',
                                   relief='solid', borderwidth=1)
@@ -199,7 +206,7 @@ class TimeLogManager:
 
         buttons_frame = ttk.Frame(parent, padding=15)
         buttons_frame.pack(fill='x', padx=10, pady=10)
-        buttons_frame.columnconfigure((0, 1, 2), weight=1)
+        buttons_frame.columnconfigure((0, 1, 2, 3), weight=1)
 
         ttk.Button(buttons_frame, text="Add Entry", command=self.add_time_log, style='Accent.TButton').grid(row=0,
                                                                                                             column=0,
@@ -216,6 +223,12 @@ class TimeLogManager:
                                                                                                                   padx=5,
                                                                                                                   pady=5,
                                                                                                                   sticky="ew")
+        # Button to show all logs, clearing the date filter
+        ttk.Button(buttons_frame, text="Show All Logs", command=self.show_all_logs, style='Accent.TButton').grid(row=0,
+                                                                                                                 column=3,
+                                                                                                                 padx=5,
+                                                                                                                 pady=5,
+                                                                                                                 sticky="ew")
 
         list_frame = ttk.LabelFrame(parent, text="Time Log List", padding=10)
         list_frame.pack(expand=True, fill='both', padx=10, pady=10)
@@ -384,21 +397,34 @@ class TimeLogManager:
         except mysql.connector.Error as err:
             self.show_status_message(f"Error fetching dropdown data: {err}", error=True)
 
-    def populate_time_log_list(self):
-        """Populate the main time log list with all entries."""
+    def populate_time_log_list(self, for_date=None):
+        """
+        Populate the main time log list. If for_date is provided,
+        it filters the logs for that specific date.
+        """
         for i in self.time_log_tree.get_children():
             self.time_log_tree.delete(i)
+
+        base_query = """
+            SELECT tl.log_id, tl.log_date, c.client_name, p.project_name, t.task_name, e.employ_name, tl.hours, tl.notes,
+            c.client_id, p.project_no, t.task_id, e.employ_id
+            FROM time_log tl
+            LEFT JOIN client c ON tl.client_id = c.client_id
+            LEFT JOIN project p ON tl.project_no = p.project_no
+            LEFT JOIN task t ON tl.task_id = t.task_id
+            LEFT JOIN employ e ON tl.employ_id = e.employ_id
+        """
+        params = []
+
+        if for_date:
+            query = base_query + " WHERE tl.log_date = %s ORDER BY tl.log_id DESC"
+            params.append(for_date)
+            self.show_status_message(f"Showing logs for {for_date}", error=False)
+        else:
+            query = base_query + " ORDER BY tl.log_date DESC, tl.log_id DESC"
+
         try:
-            self.cursor.execute("""
-                SELECT tl.log_id, tl.log_date, c.client_name, p.project_name, t.task_name, e.employ_name, tl.hours, tl.notes,
-                c.client_id, p.project_no, t.task_id, e.employ_id
-                FROM time_log tl
-                LEFT JOIN client c ON tl.client_id = c.client_id
-                LEFT JOIN project p ON tl.project_no = p.project_no
-                LEFT JOIN task t ON tl.task_id = t.task_id
-                LEFT JOIN employ e ON tl.employ_id = e.employ_id
-                ORDER BY tl.log_date DESC, tl.log_id DESC
-            """)
+            self.cursor.execute(query, tuple(params))
             logs = self.cursor.fetchall()
 
             for log in logs:
@@ -531,7 +557,7 @@ class TimeLogManager:
             """, (selected_date_str,))
             logs = self.cursor.fetchall()
 
-            total_hours = sum(log[6] for log in logs if log[6] is not None)
+            total_hours = sum(float(log[6]) for log in logs if log[6] is not None)
             self.total_hours_label.config(text=f"Total Hours: {total_hours:.2f}")
 
             if not logs:
@@ -554,42 +580,69 @@ class TimeLogManager:
         if not project_name_with_no:
             self.show_status_message("Please select a project first", error=True)
             return
+
         project_no = self._extract_id_from_combobox(project_name_with_no)
         self.report_tree.delete(*self.report_tree.get_children())
+
+        # Refactored query to reliably get all tasks and their aggregated time logs
+        query = """
+            SELECT
+                t.task_id,
+                t.task_name,
+                MIN(tl.log_date) AS start_date,
+                MAX(tl.log_date) AS end_date,
+                SUM(tl.hours) AS total_hours,
+                GROUP_CONCAT(DISTINCT e.employ_name SEPARATOR ', ') AS employees
+            FROM
+                task t
+            LEFT JOIN
+                time_log tl ON t.task_id = tl.task_id
+            LEFT JOIN
+                employ e ON tl.employ_id = e.employ_id
+            WHERE
+                t.project_no = %s
+            GROUP BY
+                t.task_id, t.task_name
+            ORDER BY
+                t.task_name;
+        """
+
         try:
-            self.cursor.execute("SELECT task_id, task_name FROM task WHERE project_no=%s ORDER BY task_name",
-                                (project_no,))
-            tasks = self.cursor.fetchall()
-            if not tasks:
-                self.show_status_message("No tasks found for selected project")
+            self.cursor.execute(query, (project_no,))
+            tasks_data = self.cursor.fetchall()
+
+            if not tasks_data:
+                self.show_status_message("No tasks found for the selected project")
                 return
 
-            task_ids = [task[0] for task in tasks]
-            placeholders = ','.join(['%s'] * len(task_ids))
-
-            self.cursor.execute(
-                f"SELECT task_id, MIN(log_date), MAX(log_date), SUM(hours) FROM time_log WHERE task_id IN ({placeholders}) GROUP BY task_id",
-                task_ids)
-            task_stats = {row[0]: (row[1], row[2], row[3]) for row in self.cursor.fetchall()}
-
-            self.cursor.execute(
-                f"SELECT tl.task_id, GROUP_CONCAT(DISTINCT e.employ_name SEPARATOR ', ') FROM time_log tl JOIN employ e ON tl.employ_id = e.employ_id WHERE tl.task_id IN ({placeholders}) GROUP BY tl.task_id",
-                task_ids)
-            task_employees = {row[0]: row[1] for row in self.cursor.fetchall()}
-
             total_project_hours = 0.0
-            for task_id, task_name in tasks:
-                stats = task_stats.get(task_id, (None, None, 0.0))
-                employees = task_employees.get(task_id, "")
-                hours = stats[2] if stats[2] is not None else 0.0
-                self.report_tree.insert("", tk.END,
-                                        values=(task_id, task_name, stats[0] or "", stats[1] or "", f"{hours:.2f}",
-                                                employees))
-                total_project_hours += hours
+            for row in tasks_data:
+                task_id, task_name, start_date, end_date, total_hours, employees = row
 
+                # Ensure hours is a number, default to 0 if None (for tasks with no logs)
+                hours_val = total_hours if total_hours is not None else 0.0
+
+                # Format dates, handling None if no logs exist for the task
+                start_date_str = start_date.strftime("%Y-%m-%d") if start_date else "N/A"
+                end_date_str = end_date.strftime("%Y-%m-%d") if end_date else "N/A"
+
+                self.report_tree.insert("", tk.END, values=(
+                    task_id,
+                    task_name,
+                    start_date_str,
+                    end_date_str,
+                    f"{float(hours_val):.2f}",
+                    employees or ""
+                ))
+
+                # FIX for TypeError: Cast Decimal to float before adding
+                total_project_hours += float(hours_val)
+
+            # Add total row
             self.report_tree.insert("", tk.END, values=("", "PROJECT TOTAL", "", "", f"{total_project_hours:.2f}", ""),
                                     tags=('total',))
             self.show_status_message(f"Report generated for project {project_name_with_no}")
+
         except mysql.connector.Error as err:
             self.show_status_message(f"Error generating report: {err}", error=True)
 
@@ -668,17 +721,17 @@ class TimeLogManager:
             self.show_status_message("Hours must be a positive number", error=True)
             return
 
-        log_id = self._generate_log_id(log_date, task_id, employ_id)
         try:
+            log_id = self._generate_log_id(log_date, task_id, employ_id)
             self.cursor.execute(
                 "INSERT INTO time_log (log_id, log_date, client_id, project_no, task_id, employ_id, hours, notes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (log_id, log_date, client_id, project_no, task_id, employ_id, hours_val, notes or None)
             )
             self.conn.commit()
             self.show_status_message("Time log entry added successfully")
-            self.populate_time_log_list()
+            self.populate_time_log_list(for_date=log_date)
             self.clear_inputs()
-        except mysql.connector.Error as err:
+        except (mysql.connector.Error, ValueError) as err:
             self.show_status_message(f"Error adding time log: {err}", error=True)
 
     def update_time_log(self):
@@ -707,17 +760,17 @@ class TimeLogManager:
             self.show_status_message("Hours must be a positive number", error=True)
             return
 
-        new_log_id = self._generate_log_id(log_date, task_id, employ_id)
         try:
+            new_log_id = self._generate_log_id(log_date, task_id, employ_id)
             self.cursor.execute(
                 "UPDATE time_log SET log_id=%s, log_date=%s, client_id=%s, project_no=%s, task_id=%s, employ_id=%s, hours=%s, notes=%s WHERE log_id=%s",
                 (new_log_id, log_date, client_id, project_no, task_id, employ_id, hours_val, notes or None, old_log_id)
             )
             self.conn.commit()
             self.show_status_message("Time log updated successfully")
-            self.populate_time_log_list()
+            self.populate_time_log_list(for_date=log_date)
             self.clear_inputs()
-        except mysql.connector.Error as err:
+        except (mysql.connector.Error, ValueError) as err:
             self.show_status_message(f"Error updating time log: {err}", error=True)
 
     def delete_time_log(self):
@@ -726,17 +779,31 @@ class TimeLogManager:
         if not selected:
             self.show_status_message("Please select a log to delete", error=True)
             return
-        log_id = self.time_log_tree.item(selected[0])['values'][0]
-        if not messagebox.askyesno("Confirm Delete", f"Delete time log {log_id}?"):
+
+        item = self.time_log_tree.item(selected[0])['values']
+        log_id = item[0]
+        log_date = item[1]
+
+        if not messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete time log {log_id}?"):
             return
         try:
             self.cursor.execute("DELETE FROM time_log WHERE log_id=%s", (log_id,))
             self.conn.commit()
             self.show_status_message("Time log deleted successfully")
-            self.populate_time_log_list()
+            self.populate_time_log_list(for_date=log_date)
             self.clear_inputs()
         except mysql.connector.Error as err:
             self.show_status_message(f"Error deleting time log: {err}", error=True)
+
+    def filter_logs_by_entry_date(self, event=None):
+        """Handler to filter the time log list based on the date_entry widget."""
+        selected_date = self.date_entry.get()
+        self.populate_time_log_list(for_date=selected_date)
+
+    def show_all_logs(self):
+        """Removes the date filter and shows all time logs."""
+        self.populate_time_log_list(for_date=None)
+        self.show_status_message("Showing all time logs")
 
     def _extract_id_from_combobox(self, combobox_value):
         """Extract ID from a 'Name (ID)' formatted string."""
@@ -745,10 +812,10 @@ class TimeLogManager:
 
     def _generate_log_id(self, log_date, task_id, employ_id):
         """Generate a unique log ID."""
-        if not all([task_id, employ_id]):
-            raise ValueError("Task ID and Employee ID are required for log ID")
+        if not all([log_date, task_id, employ_id]):
+            raise ValueError("Date, Task ID and Employee ID are required for log ID")
         # To ensure uniqueness for the same task by the same employee on the same day, add a timestamp
-        timestamp = datetime.now().strftime("%H%M%S")
+        timestamp = datetime.now().strftime("%H%M%S%f")
         return f"{log_date.replace('-', '')}-{task_id}-{employ_id}-{timestamp}"
 
     def load_db_config(self, config_file):
@@ -757,7 +824,11 @@ class TimeLogManager:
         if not os.path.exists(config_file): return None
         config.read(config_file)
         if 'mysql' not in config: return None
-        return {key: config['mysql'][key] for key in ['host', 'user', 'password', 'database']}
+        # Ensure all required keys are present
+        required_keys = ['host', 'user', 'password', 'database']
+        if not all(key in config['mysql'] for key in required_keys):
+            return None
+        return {key: config['mysql'][key] for key in required_keys}
 
     def show_status_message(self, message, error=False):
         """Display a message in the status bar."""
@@ -774,6 +845,7 @@ class TimeLogManager:
             self.employ_combobox.set(self.employ_combobox['values'][0])
         self.hours_entry.delete(0, tk.END)
         self.notes_text.delete('1.0', tk.END)
+        self.time_log_tree.selection_remove(self.time_log_tree.selection())
 
 
 if __name__ == "__main__":

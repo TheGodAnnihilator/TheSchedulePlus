@@ -5,14 +5,14 @@ import configparser
 import os
 import string
 
+
 class ClientManager:
     def __init__(self, master):
         self.master = master
 
-
         # Status bar
         self.status_var = tk.StringVar()
-        self.status_bar = ttk.Label(master, textvariable=self.status_var, relief=tk.SUNKEN, anchor='w', padding=(5,2))
+        self.status_bar = ttk.Label(master, textvariable=self.status_var, relief=tk.SUNKEN, anchor='w', padding=(5, 2))
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
         # Database connection
@@ -52,53 +52,88 @@ class ClientManager:
 
         self.cities_by_state = {
             # ... (same large dict as provided earlier)
-            "Alabama": ["Birmingham", "Montgomery", "Mobile", "Huntsville", "Tuscaloosa", "Hoover", "Dothan", "Decatur", "Auburn", "Madison"],
+            "Alabama": ["Birmingham", "Montgomery", "Mobile", "Huntsville", "Tuscaloosa", "Hoover", "Dothan", "Decatur",
+                        "Auburn", "Madison"],
             "Alaska": ["Anchorage", "Fairbanks", "Juneau", "Sitka", "Ketchikan", "Wasilla", "Kenai", "Kodiak"],
-            "Arizona": ["Phoenix", "Tucson", "Mesa", "Chandler", "Scottsdale", "Glendale", "Gilbert", "Tempe", "Peoria"],
-            "Arkansas": ["Little Rock", "Fort Smith", "Fayetteville", "Springdale", "Jonesboro", "Conway", "Rogers", "North Little Rock"],
+            "Arizona": ["Phoenix", "Tucson", "Mesa", "Chandler", "Scottsdale", "Glendale", "Gilbert", "Tempe",
+                        "Peoria"],
+            "Arkansas": ["Little Rock", "Fort Smith", "Fayetteville", "Springdale", "Jonesboro", "Conway", "Rogers",
+                         "North Little Rock"],
             "California": ["Los Angeles", "San Francisco", "San Diego", "Sacramento", "San Jose", "Fresno",
-                           "Long Beach", "Oakland", "Bakersfield", "Anaheim", "Santa Ana", "Riverside", "Stockton", "Irvine", "Chula Vista"],
-            "Colorado": ["Denver", "Colorado Springs", "Aurora", "Fort Collins", "Lakewood", "Thornton", "Arvada", "Westminster", "Pueblo", "Centennial"],
-            "Connecticut": ["Bridgeport", "New Haven", "Stamford", "Hartford", "Waterbury", "Norwalk", "Danbury", "New Britain"],
+                           "Long Beach", "Oakland", "Bakersfield", "Anaheim", "Santa Ana", "Riverside", "Stockton",
+                           "Irvine", "Chula Vista"],
+            "Colorado": ["Denver", "Colorado Springs", "Aurora", "Fort Collins", "Lakewood", "Thornton", "Arvada",
+                         "Westminster", "Pueblo", "Centennial"],
+            "Connecticut": ["Bridgeport", "New Haven", "Stamford", "Hartford", "Waterbury", "Norwalk", "Danbury",
+                            "New Britain"],
             "Delaware": ["Wilmington", "Dover", "Newark", "Middletown", "Smyrna"],
-            "Florida": ["Jacksonville", "Miami", "Tampa", "Orlando", "St. Petersburg", "Hialeah", "Tallahassee", "Port St. Lucie", "Fort Lauderdale", "Pembroke Pines"],
+            "Florida": ["Jacksonville", "Miami", "Tampa", "Orlando", "St. Petersburg", "Hialeah", "Tallahassee",
+                        "Port St. Lucie", "Fort Lauderdale", "Pembroke Pines"],
             "Georgia": ["Atlanta", "Augusta", "Columbus", "Macon", "Savannah", "Athens", "Sandy Springs", "Roswell"],
             "Hawaii": ["Honolulu", "Hilo", "Kailua", "Kapolei", "Waipahu", "Kaneohe", "Mililani Town"],
             "Idaho": ["Boise", "Nampa", "Meridian", "Idaho Falls", "Caldwell", "Pocatello", "Twin Falls"],
-            "Illinois": ["Chicago", "Aurora", "Naperville", "Joliet", "Rockford", "Springfield", "Peoria", "Elgin", "Waukegan"],
-            "Indiana": ["Indianapolis", "Fort Wayne", "Evansville", "South Bend", "Carmel", "Fishers", "Bloomington", "Hammond"],
-            "Iowa": ["Des Moines", "Cedar Rapids", "Davenport", "Sioux City", "Iowa City", "Waterloo", "Council Bluffs"],
+            "Illinois": ["Chicago", "Aurora", "Naperville", "Joliet", "Rockford", "Springfield", "Peoria", "Elgin",
+                         "Waukegan"],
+            "Indiana": ["Indianapolis", "Fort Wayne", "Evansville", "South Bend", "Carmel", "Fishers", "Bloomington",
+                        "Hammond"],
+            "Iowa": ["Des Moines", "Cedar Rapids", "Davenport", "Sioux City", "Iowa City", "Waterloo",
+                     "Council Bluffs"],
             "Kansas": ["Wichita", "Overland Park", "Kansas City", "Topeka", "Olathe", "Lawrence", "Shawnee"],
-            "Kentucky": ["Louisville", "Lexington", "Bowling Green", "Owensboro", "Covington", "Hopkinsville", "Nicholasville"],
-            "Louisiana": ["New Orleans", "Baton Rouge", "Shreveport", "Lafayette", "Lake Charles", "Kenner", "Bossier City"],
+            "Kentucky": ["Louisville", "Lexington", "Bowling Green", "Owensboro", "Covington", "Hopkinsville",
+                         "Nicholasville"],
+            "Louisiana": ["New Orleans", "Baton Rouge", "Shreveport", "Lafayette", "Lake Charles", "Kenner",
+                          "Bossier City"],
             "Maine": ["Portland", "Lewiston", "Bangor", "South Portland", "Auburn", "Biddeford", "Sanford"],
-            "Maryland": ["Baltimore", "Columbia", "Germantown", "Silver Spring", "Waldorf", "Ellicott City", "Frederick"],
-            "Massachusetts": ["Boston", "Worcester", "Springfield", "Lowell", "Cambridge", "New Bedford", "Quincy", "Lynn"],
-            "Michigan": ["Detroit", "Grand Rapids", "Warren", "Sterling Heights", "Lansing", "Ann Arbor", "Flint", "Dearborn"],
-            "Minnesota": ["Minneapolis", "Saint Paul", "Rochester", "Duluth", "Bloomington", "Brooklyn Park", "Plymouth"],
+            "Maryland": ["Baltimore", "Columbia", "Germantown", "Silver Spring", "Waldorf", "Ellicott City",
+                         "Frederick"],
+            "Massachusetts": ["Boston", "Worcester", "Springfield", "Lowell", "Cambridge", "New Bedford", "Quincy",
+                              "Lynn"],
+            "Michigan": ["Detroit", "Grand Rapids", "Warren", "Sterling Heights", "Lansing", "Ann Arbor", "Flint",
+                         "Dearborn"],
+            "Minnesota": ["Minneapolis", "Saint Paul", "Rochester", "Duluth", "Bloomington", "Brooklyn Park",
+                          "Plymouth"],
             "Mississippi": ["Jackson", "Gulfport", "Southaven", "Hattiesburg", "Biloxi", "Meridian", "Tupelo"],
-            "Missouri": ["Kansas City", "St. Louis", "Springfield", "Columbia", "Independence", "Lee's Summit", "O'Fallon"],
+            "Missouri": ["Kansas City", "St. Louis", "Springfield", "Columbia", "Independence", "Lee's Summit",
+                         "O'Fallon"],
             "Montana": ["Billings", "Missoula", "Great Falls", "Bozeman", "Butte", "Helena", "Kalispell"],
             "Nebraska": ["Omaha", "Lincoln", "Bellevue", "Grand Island", "Kearney", "Fremont", "Hastings"],
             "Nevada": ["Las Vegas", "Henderson", "Reno", "North Las Vegas", "Sparks", "Carson City", "Fernley"],
             "New Hampshire": ["Manchester", "Nashua", "Concord", "Derry", "Dover", "Rochester", "Salem"],
-            "New Jersey": ["Newark", "Jersey City", "Paterson", "Elizabeth", "Edison", "Woodbridge", "Lakewood", "Toms River", "Hamilton", "Trenton", "Clifton", "Camden", "Brick", "Cherry Hill", "Passaic", "Middletown", "Union City", "Old Bridge", "Gloucester", "East Orange", "Bayonne", "Franklin", "North Bergen", "Vineland", "Piscataway", "New Brunswick", "Jackson", "Wayne", "Somerset", "South Brunswick", "Rahway", "Nutley", "Hoboken", "West New York", "Sayreville", "West Orange", "Livingston", "Millville", "Maplewood", "Red Bank"],
+            "New Jersey": ["Newark", "Jersey City", "Paterson", "Elizabeth", "Edison", "Woodbridge", "Lakewood",
+                           "Toms River", "Hamilton", "Trenton", "Clifton", "Camden", "Brick", "Cherry Hill", "Passaic",
+                           "Middletown", "Union City", "Old Bridge", "Gloucester", "East Orange", "Bayonne", "Franklin",
+                           "North Bergen", "Vineland", "Piscataway", "New Brunswick", "Jackson", "Wayne", "Somerset",
+                           "South Brunswick", "Rahway", "Nutley", "Hoboken", "West New York", "Sayreville",
+                           "West Orange", "Livingston", "Millville", "Maplewood", "Red Bank"],
             "New Mexico": ["Albuquerque", "Las Cruces", "Rio Rancho", "Santa Fe", "Roswell", "Farmington", "Clovis"],
-            "New York": ["New York City", "Buffalo", "Rochester", "Yonkers", "Syracuse", "Albany", "New Rochelle", "Mount Vernon", "Schenectady", "Utica", "White Plains", "Hempstead", "Troy", "Niagara Falls", "Binghamton", "Freeport", "Valley Stream", "Long Beach", "Rome", "North Tonawanda", "Poughkeepsie", "Paterson", "Jamestown", "Middletown", "Elmira", "Johnstown", "Glens Falls", "Cohoes", "Amsterdam", "Newburgh", "Ogdensburg", "Plattsburgh", "Peekskill", "Watertown", "Tonawanda", "Corning", "Lockport", "Mount Kisco", "Geneva", "Mamaroneck", "Saratoga Springs", "Cortland", "Little Falls", "Oneonta", "Olean", "Sherrill", "Cohoes", "Batavia", "Gloversville", "Rensselaer", "Amsterdam"],
-            "North Carolina": ["Charlotte", "Raleigh", "Greensboro", "Durham", "Winston-Salem", "Fayetteville", "Cary", "Wilmington"],
+            "New York": ["New York City", "Buffalo", "Rochester", "Yonkers", "Syracuse", "Albany", "New Rochelle",
+                         "Mount Vernon", "Schenectady", "Utica", "White Plains", "Hempstead", "Troy", "Niagara Falls",
+                         "Binghamton", "Freeport", "Valley Stream", "Long Beach", "Rome", "North Tonawanda",
+                         "Poughkeepsie", "Paterson", "Jamestown", "Middletown", "Elmira", "Johnstown", "Glens Falls",
+                         "Cohoes", "Amsterdam", "Newburgh", "Ogdensburg", "Plattsburgh", "Peekskill", "Watertown",
+                         "Tonawanda", "Corning", "Lockport", "Mount Kisco", "Geneva", "Mamaroneck", "Saratoga Springs",
+                         "Cortland", "Little Falls", "Oneonta", "Olean", "Sherrill", "Cohoes", "Batavia",
+                         "Gloversville", "Rensselaer", "Amsterdam"],
+            "North Carolina": ["Charlotte", "Raleigh", "Greensboro", "Durham", "Winston-Salem", "Fayetteville", "Cary",
+                               "Wilmington"],
             "North Dakota": ["Fargo", "Bismarck", "Grand Forks", "Minot", "West Fargo", "Williston", "Dickinson"],
             "Ohio": ["Columbus", "Cleveland", "Cincinnati", "Toledo", "Akron", "Dayton", "Parma", "Canton"],
             "Oklahoma": ["Oklahoma City", "Tulsa", "Norman", "Broken Arrow", "Edmond", "Midwest City", "Lawton"],
             "Oregon": ["Portland", "Salem", "Eugene", "Gresham", "Hillsboro", "Beaverton", "Bend"],
-            "Pennsylvania": ["Philadelphia", "Pittsburgh", "Allentown", "Erie", "Reading", "Scranton", "Bethlehem", "Lancaster"],
+            "Pennsylvania": ["Philadelphia", "Pittsburgh", "Allentown", "Erie", "Reading", "Scranton", "Bethlehem",
+                             "Lancaster"],
             "Rhode Island": ["Providence", "Cranston", "Warwick", "Pawtucket", "East Providence", "Woonsocket"],
-            "South Carolina": ["Columbia", "Charleston", "North Charleston", "Mount Pleasant", "Rock Hill", "Greenville", "Sumter"],
+            "South Carolina": ["Columbia", "Charleston", "North Charleston", "Mount Pleasant", "Rock Hill",
+                               "Greenville", "Sumter"],
             "South Dakota": ["Sioux Falls", "Rapid City", "Aberdeen", "Brookings", "Watertown", "Mitchell"],
-            "Tennessee": ["Memphis", "Nashville", "Knoxville", "Chattanooga", "Clarksville", "Murfreesboro", "Franklin"],
-            "Texas": ["Houston", "San Antonio", "Dallas", "Austin", "Fort Worth", "El Paso", "Arlington", "Corpus Christi", "Plano", "Laredo", "Lubbock", "Garland", "Irving"],
+            "Tennessee": ["Memphis", "Nashville", "Knoxville", "Chattanooga", "Clarksville", "Murfreesboro",
+                          "Franklin"],
+            "Texas": ["Houston", "San Antonio", "Dallas", "Austin", "Fort Worth", "El Paso", "Arlington",
+                      "Corpus Christi", "Plano", "Laredo", "Lubbock", "Garland", "Irving"],
             "Utah": ["Salt Lake City", "West Valley City", "Provo", "West Jordan", "Orem", "Sandy"],
             "Vermont": ["Burlington", "South Burlington", "Rutland", "Barre", "Montpelier", "St. Albans"],
-            "Virginia": ["Virginia Beach", "Norfolk", "Chesapeake", "Richmond", "Newport News", "Alexandria", "Hampton"],
+            "Virginia": ["Virginia Beach", "Norfolk", "Chesapeake", "Richmond", "Newport News", "Alexandria",
+                         "Hampton"],
             "Washington": ["Seattle", "Spokane", "Tacoma", "Vancouver", "Bellevue", "Kent", "Everett"],
             "West Virginia": ["Charleston", "Huntington", "Morgantown", "Parkersburg", "Wheeling", "Weirton"],
             "Wisconsin": ["Milwaukee", "Madison", "Green Bay", "Kenosha", "Racine", "Appleton", "Waukesha"],
@@ -165,14 +200,15 @@ class ClientManager:
         self.row_odd_color = "#e5e5e5"
 
         self.style.configure('TNotebook', background=self.bg_color)
-        self.style.configure('TNotebook.Tab', background=self.bg_color, foreground=self.text_color, padding=[10,5])
+        self.style.configure('TNotebook.Tab', background=self.bg_color, foreground=self.text_color, padding=[10, 5])
         self.style.map('TNotebook.Tab',
                        background=[('selected', self.accent_color)],
                        foreground=[('selected', '#ffffff')])
 
         self.style.configure('TFrame', background=self.bg_color)
         self.style.configure('TLabelframe', background=self.bg_color, foreground=self.text_color)
-        self.style.configure('TLabelframe.Label', background=self.bg_color, foreground=self.accent_color, font=('Segoe UI', 11, 'bold'))
+        self.style.configure('TLabelframe.Label', background=self.bg_color, foreground=self.accent_color,
+                             font=('Segoe UI', 11, 'bold'))
         self.style.configure('TLabel', background=self.bg_color, foreground=self.text_color)
 
         self.style.configure('TEntry',
@@ -358,11 +394,14 @@ class ClientManager:
 
         buttons_frame = ttk.Frame(parent, padding=15)
         buttons_frame.grid(row=1, column=0, padx=15, pady=15, sticky="ew")
-        buttons_frame.columnconfigure((0,1,2), weight=1)
+        buttons_frame.columnconfigure((0, 1, 2), weight=1)
 
-        ttk.Button(buttons_frame, text="Add New Client", command=self.add_client).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
-        ttk.Button(buttons_frame, text="Update Client", command=self.update_client).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-        ttk.Button(buttons_frame, text="Delete Client", command=self.delete_client).grid(row=0, column=2, padx=5, pady=5, sticky="ew")
+        ttk.Button(buttons_frame, text="Add New Client", command=self.add_client).grid(row=0, column=0, padx=5, pady=5,
+                                                                                       sticky="ew")
+        ttk.Button(buttons_frame, text="Update Client", command=self.update_client).grid(row=0, column=1, padx=5,
+                                                                                         pady=5, sticky="ew")
+        ttk.Button(buttons_frame, text="Delete Client", command=self.delete_client).grid(row=0, column=2, padx=5,
+                                                                                         pady=5, sticky="ew")
 
         list_frame = ttk.LabelFrame(parent, text="Existing Clients", padding=10)
         list_frame.grid(row=2, column=0, padx=15, pady=15, sticky="nsew")
@@ -497,7 +536,8 @@ class ClientManager:
         client_id = values[0]
         try:
             self.cursor.execute(
-                "SELECT client_name, client_address, state, city, zip_code, notes FROM client WHERE client_id=%s", (client_id,)
+                "SELECT client_name, client_address, state, city, zip_code, notes FROM client WHERE client_id=%s",
+                (client_id,)
             )
             row = self.cursor.fetchone()
             if row:
@@ -558,6 +598,7 @@ class ClientManager:
         ttk.Label(input_frame, text="Client:").grid(row=0, column=0, padx=8, pady=8, sticky="w")
         self.pm_client_combo = ttk.Combobox(input_frame, values=[], state="readonly")
         self.pm_client_combo.grid(row=0, column=1, padx=8, pady=8, sticky="ew")
+        self.pm_client_combo.bind("<<ComboboxSelected>>", self.on_pm_client_selected)
 
         ttk.Label(input_frame, text="Manager Name:").grid(row=1, column=0, padx=8, pady=8, sticky="w")
         self.manager_name_entry = ttk.Entry(input_frame, width=30)
@@ -569,18 +610,24 @@ class ClientManager:
 
         buttons_frame = ttk.Frame(parent, padding=15)
         buttons_frame.grid(row=1, column=0, padx=15, pady=15, sticky="ew")
-        buttons_frame.columnconfigure((0,1,2), weight=1)
+        buttons_frame.columnconfigure((0, 1, 2), weight=1)
 
-        ttk.Button(buttons_frame, text="Add Manager", command=self.add_project_manager).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
-        ttk.Button(buttons_frame, text="Update Manager", command=self.update_project_manager).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-        ttk.Button(buttons_frame, text="Delete Manager", command=self.delete_project_manager).grid(row=0, column=2, padx=5, pady=5, sticky="ew")
+        ttk.Button(buttons_frame, text="Add Manager", command=self.add_project_manager).grid(row=0, column=0, padx=5,
+                                                                                             pady=5, sticky="ew")
+        ttk.Button(buttons_frame, text="Update Manager", command=self.update_project_manager).grid(row=0, column=1,
+                                                                                                   padx=5, pady=5,
+                                                                                                   sticky="ew")
+        ttk.Button(buttons_frame, text="Delete Manager", command=self.delete_project_manager).grid(row=0, column=2,
+                                                                                                   padx=5, pady=5,
+                                                                                                   sticky="ew")
 
         list_frame = ttk.LabelFrame(parent, text="Existing Project Managers", padding=10)
         list_frame.grid(row=2, column=0, padx=15, pady=15, sticky="nsew")
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(2, weight=1)
 
-        self.project_manager_list = ttk.Treeview(list_frame, columns=("PM ID", "Client ID", "Manager Name"), show="headings")
+        self.project_manager_list = ttk.Treeview(list_frame, columns=("PM ID", "Client ID", "Manager Name"),
+                                                 show="headings")
         self.project_manager_list.heading("PM ID", text="PM ID")
         self.project_manager_list.heading("Client ID", text="Client ID")
         self.project_manager_list.heading("Manager Name", text="Manager Name")
@@ -596,6 +643,14 @@ class ClientManager:
 
         self.populate_project_manager_client_dropdown()
 
+    def on_pm_client_selected(self, event=None):
+        client_with_id = self.pm_client_combo.get()
+        if client_with_id:
+            client_id = client_with_id.split("(")[-1][:-1].strip()
+            self.populate_project_manager_list(client_id)
+        else:
+            self.populate_project_manager_list()
+
     def populate_project_manager_client_dropdown(self):
         try:
             self.cursor.execute("SELECT client_id, client_name FROM client ORDER BY client_name")
@@ -604,6 +659,7 @@ class ClientManager:
             self.pm_client_combo['values'] = client_names
             if client_names and not self.pm_client_combo.get():
                 self.pm_client_combo.set(client_names[0])
+                self.on_pm_client_selected()  # Trigger filtering for the default client
         except mysql.connector.Error as e:
             self.show_status_message(f"Error fetching clients for managers: {e}", True)
 
@@ -619,7 +675,8 @@ class ClientManager:
             return
         client_id = client_with_id.split("(")[-1][:-1].strip()
         try:
-            self.cursor.execute("INSERT INTO project_manager (client_id, manager_name, notes) VALUES (%s, %s, %s)", (client_id, manager_name, notes if notes else None))
+            self.cursor.execute("INSERT INTO project_manager (client_id, manager_name, notes) VALUES (%s, %s, %s)",
+                                (client_id, manager_name, notes if notes else None))
             self.conn.commit()
             self.show_status_message(f"Manager '{manager_name}' added for client '{client_id}'.")
             self.clear_project_manager_input_fields()
@@ -641,7 +698,8 @@ class ClientManager:
             return
         client_id = client_with_id.split("(")[-1][:-1].strip()
         try:
-            self.cursor.execute("UPDATE project_manager SET client_id=%s, manager_name=%s, notes=%s WHERE pm_id=%s", (client_id, manager_name, notes if notes else None, pm_id))
+            self.cursor.execute("UPDATE project_manager SET client_id=%s, manager_name=%s, notes=%s WHERE pm_id=%s",
+                                (client_id, manager_name, notes if notes else None, pm_id))
             self.conn.commit()
             self.show_status_message("Project Manager updated successfully.")
             self.clear_project_manager_input_fields()
@@ -674,10 +732,14 @@ class ClientManager:
         values = self.project_manager_list.item(selected, "values")
         pm_id, client_id, manager_name = values
         try:
-            self.cursor.execute("SELECT client_name, notes FROM client WHERE client_id=%s", (client_id,))
+            self.cursor.execute("SELECT client_name FROM client WHERE client_id=%s", (client_id,))
             client_row = self.cursor.fetchone()
             client_name = client_row[0] if client_row else client_id
-            self.pm_client_combo.set(f"{client_name} ({client_id})")
+
+            client_display_text = f"{client_name} ({client_id})"
+            self.pm_client_combo.set(client_display_text)
+            self.on_pm_client_selected()  # Refresh list for the selected client
+
             self.manager_name_entry.delete(0, tk.END)
             self.manager_name_entry.insert(0, manager_name)
             self.cursor.execute("SELECT notes FROM project_manager WHERE pm_id=%s", (pm_id,))
@@ -692,10 +754,16 @@ class ClientManager:
         self.manager_name_entry.delete(0, tk.END)
         self.pm_notes_text.delete('1.0', tk.END)
 
-    def populate_project_manager_list(self):
+    def populate_project_manager_list(self, client_id=None):
         self.project_manager_list.delete(*self.project_manager_list.get_children())
         try:
-            self.cursor.execute("SELECT pm_id, client_id, manager_name FROM project_manager ORDER BY client_id")
+            if client_id:
+                query = "SELECT pm_id, client_id, manager_name FROM project_manager WHERE client_id=%s ORDER BY manager_name"
+                self.cursor.execute(query, (client_id,))
+            else:
+                query = "SELECT pm_id, client_id, manager_name FROM project_manager ORDER BY client_id"
+                self.cursor.execute(query)
+
             rows = self.cursor.fetchall()
             for i, row in enumerate(rows):
                 tag = 'evenrow' if i % 2 == 0 else 'oddrow'
@@ -958,7 +1026,6 @@ class ClientManager:
         except mysql.connector.Error as e:
             self.show_status_message(f"Error fetching projects: {e}", error=True)
 
-
     # --- Task tab ---
     def create_task_widgets(self, parent):
         parent.configure(style='TFrame')
@@ -1015,18 +1082,22 @@ class ClientManager:
 
         buttons_frame = ttk.Frame(parent, padding=15)
         buttons_frame.grid(row=1, column=0, padx=15, pady=15, sticky="ew")
-        buttons_frame.columnconfigure((0,1,2), weight=1)
+        buttons_frame.columnconfigure((0, 1, 2), weight=1)
 
-        ttk.Button(buttons_frame, text="Add New Task", command=self.add_task).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
-        ttk.Button(buttons_frame, text="Update Task", command=self.update_task).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-        ttk.Button(buttons_frame, text="Delete Task", command=self.delete_task).grid(row=0, column=2, padx=5, pady=5, sticky="ew")
+        ttk.Button(buttons_frame, text="Add New Task", command=self.add_task).grid(row=0, column=0, padx=5, pady=5,
+                                                                                   sticky="ew")
+        ttk.Button(buttons_frame, text="Update Task", command=self.update_task).grid(row=0, column=1, padx=5, pady=5,
+                                                                                     sticky="ew")
+        ttk.Button(buttons_frame, text="Delete Task", command=self.delete_task).grid(row=0, column=2, padx=5, pady=5,
+                                                                                     sticky="ew")
 
         list_frame = ttk.LabelFrame(parent, text="Existing Tasks", padding=10)
         list_frame.grid(row=2, column=0, padx=15, pady=15, sticky="nsew")
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(2, weight=1)
 
-        columns = ("Task ID", "Client ID", "Project No", "Task Name", "Billable", "Hourly Rate", "Lumpsum", "Status", "Notes")
+        columns = ("Task ID", "Client ID", "Project No", "Task Name", "Billable", "Hourly Rate", "Lumpsum", "Status",
+                   "Notes")
         self.task_list = ttk.Treeview(list_frame, columns=columns, show="headings")
         for col in columns:
             self.task_list.heading(col, text=col)
@@ -1103,7 +1174,8 @@ class ClientManager:
 
         if billable == "Yes":
             if not self.validate_decimal(hourly_rate) or not self.validate_decimal(lumpsum):
-                self.show_status_message("Hourly rate and lumpsum must be positive numbers with up to 2 decimals.", True)
+                self.show_status_message("Hourly rate and lumpsum must be positive numbers with up to 2 decimals.",
+                                         True)
                 return
             if (not hourly_rate or float(hourly_rate) == 0) and (not lumpsum or float(lumpsum) == 0):
                 self.show_status_message("Enter either hourly rate or lumpsum greater than zero.", True)
@@ -1115,7 +1187,8 @@ class ClientManager:
         try:
             self.cursor.execute(
                 "INSERT INTO task (client_id, project_no, task_name, billable, hourly_rate, lumpsum, task_status, notes) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                (client_id, project_no, task_name, billable, float(hourly_rate) if hourly_rate else None, float(lumpsum) if lumpsum else None, task_status, notes if notes else None)
+                (client_id, project_no, task_name, billable, float(hourly_rate) if hourly_rate else None,
+                 float(lumpsum) if lumpsum else None, task_status, notes if notes else None)
             )
             self.conn.commit()
             self.show_status_message(f"Task '{task_name}' added successfully.")
@@ -1157,7 +1230,8 @@ class ClientManager:
 
         if billable == "Yes":
             if not self.validate_decimal(hourly_rate) or not self.validate_decimal(lumpsum):
-                self.show_status_message("Hourly rate and lumpsum must be positive numbers with up to 2 decimals.", True)
+                self.show_status_message("Hourly rate and lumpsum must be positive numbers with up to 2 decimals.",
+                                         True)
                 return
             if (not hourly_rate or float(hourly_rate) == 0) and (not lumpsum or float(lumpsum) == 0):
                 self.show_status_message("Enter either hourly rate or lumpsum greater than zero.", True)
@@ -1169,7 +1243,8 @@ class ClientManager:
         try:
             self.cursor.execute(
                 "UPDATE task SET client_id=%s, project_no=%s, task_name=%s, billable=%s, hourly_rate=%s, lumpsum=%s, task_status=%s, notes=%s WHERE task_id=%s",
-                (client_id, project_no, task_name, billable, float(hourly_rate) if hourly_rate else None, float(lumpsum) if lumpsum else None, task_status, notes if notes else None, task_id)
+                (client_id, project_no, task_name, billable, float(hourly_rate) if hourly_rate else None,
+                 float(lumpsum) if lumpsum else None, task_status, notes if notes else None, task_id)
             )
             self.conn.commit()
             self.show_status_message(f"Task '{task_name}' updated successfully.")
@@ -1204,7 +1279,8 @@ class ClientManager:
         task_id = values[0]
         try:
             self.cursor.execute(
-                "SELECT client_id, project_no, task_name, billable, hourly_rate, lumpsum, task_status, notes FROM task WHERE task_id=%s", (task_id,))
+                "SELECT client_id, project_no, task_name, billable, hourly_rate, lumpsum, task_status, notes FROM task WHERE task_id=%s",
+                (task_id,))
             row = self.cursor.fetchone()
             if row:
                 client_id, project_no, task_name, billable, hourly_rate, lumpsum, status, notes = row
@@ -1282,7 +1358,8 @@ class ClientManager:
             self.task_project_combo['values'] = []
             return
         try:
-            self.cursor.execute("SELECT project_no, project_name FROM project WHERE client_id=%s ORDER BY client_id", (client_id,))
+            self.cursor.execute("SELECT project_no, project_name FROM project WHERE client_id=%s ORDER BY client_id",
+                                (client_id,))
             rows = self.cursor.fetchall()
             projects = [f"{r[1]} ({r[0]})" for r in rows]
             self.task_project_combo['values'] = projects
@@ -1339,4 +1416,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = ClientManager(root)
     root.mainloop()
-
